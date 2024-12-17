@@ -7,10 +7,10 @@ public class User {
     private final String name;
     private final String surname;
     private final String email;
-    private final String gender;
+    private final Gender gender;
     private byte[] photo;
 
-    public User(String name, String surname, String email, String gender) {
+    public User(String name, String surname, String email, Gender gender) {
         this.name = name;
         this.surname = surname;
         this.email = email;
@@ -34,7 +34,7 @@ public class User {
         return email;
     }
 
-    public String getGender() {
+    public Gender getGender() {
         return gender;
     }
 
