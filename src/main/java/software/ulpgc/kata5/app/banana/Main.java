@@ -1,4 +1,4 @@
-package software.ulpgc.kata5.app.main;
+package software.ulpgc.kata5.app.banana;
 
 import software.ulpgc.kata5.app.*;
 import software.ulpgc.kata5.architecture.io.Store;
