@@ -18,19 +18,33 @@ public class DatabaseRecorder implements Recorder {
         this.preparedStatement = connection.prepareStatement("INSERT INTO movies (title, duration, year) VALUES (?, ?, ?)");
     }
 
-    private void createTableIfNotExists() throws SQLException {
-        connection.createStatement().execute("CREATE TABLE IF NOT EXISTS movies (title TEXT, duration INTEGER, year INTEGER)");
+    @Override
+    public void record(Stream<Movie> movies) {
+        try {
+            movies.forEach(this::record);
+            flushBatch();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
+    private void flushBatch() throws SQLException {
+        preparedStatement.executeBatch();
+        connection.commit();
+    }
 
     private int count = 0;
-    public void record(Movie movie) {
+    private void record(Movie movie) {
         try {
             insert(movie);
             flushBatchIfRequired();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private void flushBatchIfRequired() throws SQLException {
+        if (++count % 10000 == 0) preparedStatement.executeBatch();
     }
 
     private void insert(Movie movie) throws SQLException {
@@ -40,18 +54,7 @@ public class DatabaseRecorder implements Recorder {
         preparedStatement.addBatch();
     }
 
-    private void flushBatchIfRequired() throws SQLException {
-        if (++count % 10000 == 0) preparedStatement.executeBatch();
-    }
-
-    @Override
-    public void record(Stream<Movie> movies) throws SQLException {
-        movies.forEach(this::record);
-        flushBatch();
-    }
-
-    private void flushBatch() throws SQLException {
-        preparedStatement.executeBatch();
-        connection.commit();
+    private void createTableIfNotExists() throws SQLException {
+        connection.createStatement().execute("CREATE TABLE IF NOT EXISTS movies (title TEXT, duration INTEGER, year INTEGER)");
     }
 }

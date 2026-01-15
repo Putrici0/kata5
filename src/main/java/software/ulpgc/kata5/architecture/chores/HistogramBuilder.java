@@ -1,7 +1,7 @@
 package software.ulpgc.kata5.architecture.chores;
 
-import software.ulpgc.kata5.architecture.model.Movie;
 import software.ulpgc.kata5.architecture.viewmodel.Histogram;
+import software.ulpgc.kata5.architecture.model.Movie;
 
 import java.util.HashMap;
 import java.util.Map;

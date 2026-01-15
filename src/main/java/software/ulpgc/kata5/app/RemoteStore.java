@@ -4,7 +4,6 @@ import software.ulpgc.kata5.architecture.io.Store;
 import software.ulpgc.kata5.architecture.model.Movie;
 
 import java.io.*;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.function.Function;
@@ -22,39 +21,42 @@ public class RemoteStore implements Store {
     @Override
     public Stream<Movie> movies() {
         try {
-            return MoviesIn(new URL(url));
+            return moviesIn(new URL(url));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private Stream<Movie> MoviesIn(URL url) throws IOException {
+    private Stream<Movie> moviesIn(URL url) throws IOException {
         return moviesIn(url.openConnection());
     }
 
-    private Stream<Movie> moviesIn(URLConnection urlConnection) throws IOException {
-        return moviesIn(unzip(urlConnection.getInputStream()));
-    }
-
-    private InputStream unzip(InputStream inputStream) throws IOException {
-        return new GZIPInputStream(new BufferedInputStream(inputStream));
+    private Stream<Movie> moviesIn(URLConnection connection) throws IOException {
+        return moviesIn(unzip(connection.getInputStream()));
     }
 
     private Stream<Movie> moviesIn(InputStream inputStream) {
         return moviesIn(toReader(inputStream))
-                .onClose(() -> close(inputStream));
+                .onClose(()->close(inputStream));
     }
 
     private void close(InputStream inputStream) {
         try {
             inputStream.close();
-        } catch (IOException e) {}
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
+
     private Stream<Movie> moviesIn(BufferedReader reader) {
         return reader.lines().skip(1).map(deserialize);
     }
 
     private BufferedReader toReader(InputStream inputStream) {
         return new BufferedReader(new InputStreamReader(inputStream));
+    }
+
+    private InputStream unzip(InputStream inputStream) throws IOException {
+        return new GZIPInputStream(new BufferedInputStream(inputStream));
     }
 }

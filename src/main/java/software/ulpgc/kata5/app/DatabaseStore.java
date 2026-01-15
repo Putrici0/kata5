@@ -3,16 +3,15 @@ package software.ulpgc.kata5.app;
 import software.ulpgc.kata5.architecture.io.Store;
 import software.ulpgc.kata5.architecture.model.Movie;
 
-import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-
 public class DatabaseStore implements Store {
     private final Connection connection;
+
     public DatabaseStore(Connection connection) {
         this.connection = connection;
     }
@@ -26,28 +25,25 @@ public class DatabaseStore implements Store {
         }
     }
 
-    private ResultSet resultSet() throws SQLException {
-
-        return connection.createStatement().executeQuery("SELECT * FROM movies");
-    }
-
-    private Stream<Movie> moviesIn(ResultSet rs) throws SQLException {
-        return Stream.generate(() -> {
-                    try {
-                        return nextMovieIn(rs);
-                    } catch (SQLException e) {
-                        throw new RuntimeException(e);
-                    }
-                })
-                .onClose(() -> close(rs))
+    private Stream<Movie> moviesIn(ResultSet rs) {
+        return Stream.generate(()->nextMovieIn(rs))
+                .onClose(()->close(rs))
                 .takeWhile(Objects::nonNull);
     }
 
-    private Movie nextMovieIn(ResultSet rs) throws SQLException {
+    private Movie nextMovieIn(ResultSet rs) {
+        try {
+            return rs.next() ? readMovieIn(rs) : null;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private Movie readMovieIn(ResultSet rs) throws SQLException {
         return new Movie(
                 rs.getString(1),
-                rs.getInt(2),
-                rs.getInt(3)
+                rs.getInt(3),
+                rs.getInt(2)
         );
     }
 
@@ -59,5 +55,7 @@ public class DatabaseStore implements Store {
         }
     }
 
-
+    private ResultSet resultSet() throws SQLException {
+        return connection.createStatement().executeQuery("SELECT * FROM movies");
+    }
 }
